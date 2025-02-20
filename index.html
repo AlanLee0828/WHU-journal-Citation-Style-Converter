@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>武大学报（社科版）文献引用格式转换工具</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .container {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            white-space: pre-wrap;
+        }
+        .instruction {
+            margin: 20px 0;
+            padding: 15px;
+            background: #e1f5fe;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>武大学报（社科版）文献引用格式转换工具</h1>
+    <div class="instruction">
+        <p>将国标GB/T7714-2015格式转换为武汉大学学报（哲学社会科学版）格式</p>
+        <p>支持多行输入，每行一个文献引用，按回车换行，目前较为适配知网生成的国标文献引用</p>
+        <p>目前仅支持连续出版物中析出的文献（期刊论文等）的转换</p>
+        <p>示例输入：<br>田天,田建民.《新青年》与中国现代文化的历史转型——纪念《新青年》创刊100周年[J].新闻爱好者,2016,(03):52-55.DOI:10.16017/j.cnki.xwahz.2016.03.011.</p>
+    </div>
+    <div class="container">
+        <textarea id="input" placeholder="请在此输入国标格式的引用文献..."></textarea>
+        <button onclick="convertFormat()">转换格式</button>
+        <button onclick="copyResult()" id="copyBtn" style="margin-left: 10px; background: #2196F3;">复制结果</button>
+        <div id="result"></div>
+    </div>
+    <script>
+        function copyResult() {
+            const result = document.getElementById('result').textContent;
+            if (result) {
+                navigator.clipboard.writeText(result).then(() => {
+                    const copyBtn = document.getElementById('copyBtn');
+                    const originalText = copyBtn.textContent;
+                    copyBtn.textContent = '已复制！';
+                    copyBtn.style.background = '#4CAF50';
+                    setTimeout(() => {
+                        copyBtn.textContent = originalText;
+                        copyBtn.style.background = '#2196F3';
+                    }, 2000);
+                });
+            }
+        }
+        function convertFormat() {
+            const input = document.getElementById('input').value;
+            const lines = input.split('\n');
+            const results = lines.map(line => {
+                if (!line.trim()) return '';
+                
+                // 提取主要责任者
+                let authors = line.split('.')[0].replace(/,/g, '，');
+                
+                // 提取文献题名
+                let titleMatch = line.match(/\.(.*?)\[/);
+                let title = titleMatch ? titleMatch[1].trim() : '';
+                
+                // 提取连续出版物题名
+                let journalMatch = line.match(/\]\.(.*?),/);
+                let journal = journalMatch ? journalMatch[1].trim() : '';
+                
+                // 提取年份、卷和期
+                let yearMatch = line.match(/,(\d{4}),?(\d+)?\((\d+)\)/);  // 修改正则表达式以匹配可能的卷号
+                let year = yearMatch ? yearMatch[1] : '';
+                let volume = yearMatch && yearMatch[2] ? yearMatch[2] : '';  // 提取卷号
+                let issue = yearMatch ? yearMatch[3] : '';
+                
+                // 组合成武大格式，如果有卷号则添加，使用全角括号
+                let volumeIssue = volume ? `${volume}（${parseInt(issue)}）` : `（${parseInt(issue)}）`;
+                return `${authors}. ${title}. ${journal}，${year}，${volumeIssue}.`;
+            });
+            
+            document.getElementById('result').textContent = results.filter(r => r).join('\n');
+        }
+    </script>
+</body>
+</html>
